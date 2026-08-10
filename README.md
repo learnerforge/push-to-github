@@ -1,11 +1,9 @@
 <div align="center">
-
-<table>
-  <tr>
-    <td valign="middle"><img src="assets/urgithub.svg" height="100" alt="URGithub icon"></td>
-    <td valign="middle"><h1>URGithub</h1></td>
-  </tr>
-</table>
+  <div style="display: inline-flex; align-items: center; gap: 12px;">
+    <img src="assets/urgithub.svg" width="64" alt="URGithub icon">
+    <h1 style="margin: 0;">URGithub</h1>
+  </div>
+</div>
 
 ### The safe, automatic Git repository manager for your local machine.
 

@@ -490,7 +490,7 @@ Bugs, ideas and pull requests are welcome. Start at **[`docs/ISSUE-BACKLOG.md`](
 
 ## License
 
-MIT. <!-- add the LICENSE file — docs/URGITHUB-TASKS.md, item A4 -->
+[MIT](LICENSE) — Copyright (c) 2026 Ganesh Bakkera
 
 ---
 

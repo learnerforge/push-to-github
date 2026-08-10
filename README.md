@@ -265,7 +265,7 @@ URGithub's **core engine, GUI, wizard, and file watcher are cross-platform**. On
 
 If you are using Linux or macOS, you can still use the complete repository management engine; you simply configure scheduling through the operating system's native scheduling mechanism.
 
-The complete screen-by-screen guide lives in **[`setup.md`](setup.md)**.
+The complete installation and setup manual lives in **[`docs/SETUP.md`](docs/SETUP.md)**.
 
 ## Installing the tools (from scratch)
 

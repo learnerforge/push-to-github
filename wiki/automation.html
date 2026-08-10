@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Automation — URGithub Wiki</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="index.html"><img src="../assets/urgithub.svg" alt="URGithub icon"> URGithub <span class="wiki">Wiki</span></a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="installation.html">Installation</a>
+    <a href="configuration.html">Configuration</a>
+    <a href="automation.html" aria-current="page">Automation</a>
+    <a href="security.html">Security</a>
+    <a href="report.html">Report</a>
+    <a href="troubleshooting.html">Troubleshooting</a>
+  </nav>
+</header>
+
+<main>
+  <h1>Automation: Triggers &amp; Scheduling</h1>
+  <p>URGithub is driven by triggers. Every trigger — startup, shutdown, a timer, a file change, a button — enters the exact same pipeline: <code>DISCOVER → SCAN → SECURITY → VALIDATE → SYNC → COMMIT → PUSH → JOURNAL → REPORT</code>.</p>
+
+  <h2>Trigger types</h2>
+  <table>
+    <tr><th>Trigger</th><th>Config key</th><th>Notes</th></tr>
+    <tr><td>Login / startup</td><td><code>triggers.startup</code></td><td>Runs when you log in</td></tr>
+    <tr><td>Scheduled repeat</td><td><code>triggers.every_hours</code> / <code>every_minutes</code></td><td>e.g. <code>3</code> = every 3 hours</td></tr>
+    <tr><td>Daily at a time</td><td><code>triggers.at_time</code></td><td>e.g. <code>"18:00"</code></td></tr>
+    <tr><td>File change</td><td><code>triggers.file_change</code></td><td>Watches <code>config.json</code>, base folder, local repos</td></tr>
+    <tr><td>Shutdown quick-push</td><td><code>triggers.shutdown</code></td><td>Windows only — push pending work before shutdown</td></tr>
+    <tr><td>Manual</td><td><code>triggers.manual</code></td><td>Control Center button / CLI</td></tr>
+  </table>
+
+  <h2>Windows — Task Scheduler</h2>
+  <p>The <code>--schedule</code> family installs and manages everything through Windows Task Scheduler:</p>
+  <pre><code>python urgithub.py --schedule install
+python urgithub.py --schedule status
+python urgithub.py --schedule uninstall</code></pre>
+  <p>It creates tasks such as:</p>
+  <ul>
+    <li><strong>Run at logon</strong> — starts URGithub when you sign in.</li>
+    <li><strong>Scheduled runs</strong> — every N hours, at a daily time, or every N minutes, aligned to your trigger settings.</li>
+    <li><strong>Shutdown quick-push</strong> — a <em>PowerShell window opens briefly and pushes pending changes</em> before shutdown (requires admin privileges; the installer triggers a UAC prompt).</li>
+  </ul>
+
+  <h3>Resident scheduler (Windows)</h3>
+  <p>Running URGithub from the system tray (<code>--tray</code> or the Control Center) starts a resident scheduler that repeats the run interval <em>while the app is running</em>, complementing the Task Scheduler tasks.</p>
+
+  <h3>Resident scheduler (Linux / macOS)</h3>
+  <p>URGithub is a regular process. Run it from the terminal, or supervise it so it stays alive and the resident scheduler keeps repeating at your configured interval.</p>
+
+  <h2>Linux — cron / systemd</h2>
+  <p>Add a cron entry using the absolute path to the CLI:</p>
+  <pre><code>crontab -e</code></pre>
+  <pre><code><span class="c"># every 3 hours</span>
+0 */3 * * * cd /home/you/push-to-github && /usr/bin/python3 urgithub.py --run scheduled
+
+<span class="c"># at 18:00 daily</span>
+0 18 * * * cd /home/you/push-to-github && /usr/bin/python3 urgithub.py --run scheduled</code></pre>
+  <p>Alternative: a <code>systemd</code> timer unit calling the same <code>--run scheduled</code> entry point.</p>
+
+  <h2>macOS — launchd / cron</h2>
+  <p>Use a <code>launchd</code> plist (the <code>StartInterval</code> key repeats every N seconds) or plain cron, both calling <code>python3 urgithub.py --run scheduled</code> with the absolute path to <code>urgithub.py</code>.</p>
+
+  <h2>Shutdown quick-push</h2>
+  <div class="callout warn">
+    <strong>Windows only.</strong> During shutdown, URGithub pushes pending changes within a short time budget
+    (<code>shutdown.timeout_seconds</code>, default 30s). It never delays the machine indefinitely and does not open the report by default (<code>shutdown.open_report</code>).
+  </div>
+
+  <h2>Best practices</h2>
+  <ul>
+    <li>Use absolute paths in cron / launchd entries — scheduled runs have no terminal PATH.</li>
+    <li>Keep <code>every_minutes</code> at <code>0</code> unless you need sub-hour runs.</li>
+    <li>After any <code>triggers.*</code> change, reinstall the scheduler: <code>--schedule install</code>, then <code>--schedule status</code>.</li>
+    <li>All triggers share one pipeline and one report — scheduled runs are never "weaker" than manual ones.</li>
+  </ul>
+
+  <div class="callout">
+    Next: <a href="security.html">Security</a> — what the safety model blocks and why.
+  </div>
+</main>
+
+<footer>URGithub Wiki — part of <a href="https://github.com/learnerforge/push-to-github">learnerforge/push-to-github</a></footer>
+</body>
+</html>

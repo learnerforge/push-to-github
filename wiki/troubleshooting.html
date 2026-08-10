@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Troubleshooting — URGithub Wiki</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="index.html"><img src="../assets/urgithub.svg" alt="URGithub icon"> URGithub <span class="wiki">Wiki</span></a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="installation.html">Installation</a>
+    <a href="configuration.html">Configuration</a>
+    <a href="automation.html">Automation</a>
+    <a href="security.html">Security</a>
+    <a href="report.html">Report</a>
+    <a href="troubleshooting.html" aria-current="page">Troubleshooting</a>
+  </nav>
+</header>
+
+<main>
+  <h1>Troubleshooting</h1>
+
+  <h2>Python is not recognized</h2>
+  <pre><code>python --version   <span class="c"># or python3, or py -3</span></code></pre>
+  <ul>
+    <li>Install Python 3.10+ from python.org or <code>winget install Python.Python.3.12</code>.</li>
+    <li>Restart the terminal so <code>PATH</code> updates.</li>
+    <li>If only <code>python3</code> is available (Linux/macOS), use <code>python3</code> in every command.</li>
+  </ul>
+
+  <h2>Git is not recognized</h2>
+  <pre><code>git --version</code></pre>
+  <p>Install Git and restart the terminal. URGithub runs Git through the <code>PATH</code>.</p>
+
+  <h2>GitHub CLI is not recognized</h2>
+  <pre><code>gh --version</code></pre>
+  <p>Install GitHub CLI (<code>winget install GitHub.cli</code>, <code>apt install gh</code>, or <code>brew install gh</code>) and restart the terminal.</p>
+
+  <h2>Authentication check fails</h2>
+  <pre><code>gh auth status</code></pre>
+  <p>If not logged in, authenticate:</p>
+  <pre><code>gh auth login</code></pre>
+  <p>The setup wizard's authentication step must report that you are logged in successfully. Choose the login flow that matches your setup (device flow for SSH/remote sessions).</p>
+
+  <h2>Commits fail with "user.name" / "user.email"</h2>
+  <pre><code>git config --global user.name "Your Name"
+git config --global user.email "you@example.com"</code></pre>
+  <p>Git refuses to commit without an identity.</p>
+
+  <h2>Synchronization is blocked</h2>
+  <p><strong>Do not bypass the safety mechanism immediately.</strong> First inspect <code>report.html</code> and check for:</p>
+  <ul>
+    <li>divergence</li>
+    <li>detected secrets</li>
+    <li>invalid repository state</li>
+    <li>missing remote</li>
+    <li>authorization failure</li>
+    <li>repository access failure</li>
+    <li>unsupported state</li>
+  </ul>
+  <p>A blocked operation is often an <strong>intentional safety result</strong>. Resolve the cause — e.g. remove the secret file, fix the remote, or review a divergence manually — then rerun. For diverged repos, resolve the merge yourself; URGithub never does it for you.</p>
+
+  <h2>GUI does not open</h2>
+  <pre><code>python -c "import tkinter; print('tkinter OK')"</code></pre>
+  <p>If this fails on Linux, install the Tk package for your distribution (e.g. <code>python3-tk</code>). The wizard and Control Center require <code>tkinter</code>.</p>
+
+  <h2>Scheduled task does not run (Windows)</h2>
+  <pre><code>python urgithub.py --schedule status</code></pre>
+  <p>Reinstall the schedule and check the registered tasks:</p>
+  <pre><code>python urgithub.py --schedule install</code></pre>
+  <p>The shutdown quick-push task requires admin rights — run the install that triggers the UAC prompt. Confirm the tasks appear in Task Scheduler and that the Python path stored in the task is correct.</p>
+
+  <h2>Scheduled run fails on Linux/macOS</h2>
+  <p>Cron and launchd jobs run with no terminal <code>PATH</code>. Use absolute paths:</p>
+  <pre><code>0 */3 * * * cd /home/you/push-to-github && /usr/bin/python3 urgithub.py --run scheduled</code></pre>
+  <p>Confirm the real interpreter path with <code>which python3</code>.</p>
+
+  <h2>Missing repositories</h2>
+  <ul>
+    <li>Run <code>python urgithub.py --scan</code> then <code>python urgithub.py --repos</code> to see what is discovered.</li>
+    <li>Reconciles against <code>gh repo list</code> — check the <code>github_owner</code> setting and <code>gh auth status</code>.</li>
+    <li>Forked repos are skipped when <code>skip_forks</code> is enabled.</li>
+    <li>New clones require <code>clone_missing_repos</code> to be enabled (default).</li>
+  </ul>
+
+  <h2>Reporting a problem</h2>
+  <p>Open <code>report.html</code> for the failed run and include:</p>
+  <ul>
+    <li>the trigger that started the run</li>
+    <li>the repositories and operations involved</li>
+    <li>the failure / blocked reason from the report</li>
+    <li>relevant journal entries (<code>journal.jsonl</code>)</li>
+    <li>your platform and Python/Git/gh versions</li>
+  </ul>
+
+  <div class="callout">
+    Back to <a href="index.html">Home</a>.
+  </div>
+</main>
+
+<footer>URGithub Wiki — part of <a href="https://github.com/learnerforge/push-to-github">learnerforge/push-to-github</a></footer>
+</body>
+</html>

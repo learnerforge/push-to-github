@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home — URGithub Wiki</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="index.html"><img src="../assets/urgithub.svg" alt="URGithub icon"> URGithub <span class="wiki">Wiki</span></a>
+  <nav>
+    <a href="index.html" aria-current="page">Home</a>
+    <a href="installation.html">Installation</a>
+    <a href="configuration.html">Configuration</a>
+    <a href="automation.html">Automation</a>
+    <a href="security.html">Security</a>
+    <a href="report.html">Report</a>
+    <a href="troubleshooting.html">Troubleshooting</a>
+  </nav>
+</header>
+
+<main>
+  <h1>URGithub Wiki</h1>
+  <p>The safe, automatic Git repository manager for your local machine.</p>
+
+  <div class="callout ok">
+    <strong>In one line:</strong> URGithub watches your repositories folder, discovers every repo, scans each one
+    through a <strong>23-point inspection</strong>, blocks anything unsafe, synchronizes the rest, and writes a
+    human-readable HTML report of everything that happened.
+  </div>
+
+  <h2>What URGithub does</h2>
+  <ul>
+    <li><strong>Discovers</strong> every repository under <code>repos in github\</code> and reconciles it against <code>gh repo list</code>. On first run it clones your entire GitHub account.</li>
+    <li><strong>Scans</strong> each repository through a 23-point inspection.</li>
+    <li><strong>Protects</strong> you with safety gates — secrets, oversized files, divergence and permissions.</li>
+    <li><strong>Synchronizes</strong> safely: fetch → fast-forward-only pull → commit (per policy) → push. Never <code>reset</code>, <code>--force</code>, <code>rebase</code> or <code>clean</code>.</li>
+    <li><strong>Reports</strong> every run to <code>report.html</code> — success, failure, or nothing-changed alike.</li>
+    <li><strong>Journals</strong> every action to an append-only JSONL file with before/after SHAs.</li>
+  </ul>
+
+  <h2>One pipeline, every trigger</h2>
+  <pre><code>DISCOVER → SCAN → SECURITY → VALIDATE → SYNC → COMMIT → PUSH → JOURNAL → REPORT</code></pre>
+  <p>Every trigger — startup, shutdown, a timer, a file change, a button click — enters this <strong>one pipeline</strong>. There is never a second, unsafer path.</p>
+
+  <h2>The four rules</h2>
+  <table>
+    <tr><th>Rule</th><th>Meaning</th></tr>
+    <tr><td><strong>Rule 0</strong></td><td>No registration → no operations. Only <code>--setup</code> runs first.</td></tr>
+    <tr><td><strong>Rule 1</strong></td><td>No scan → no sync. The sync engine only touches repos scanned in the current run.</td></tr>
+    <tr><td><strong>Rule 2</strong></td><td>Every run produces <code>report.html</code> — success, failure, and nothing-changed alike.</td></tr>
+    <tr><td><strong>Rule 3</strong></td><td>Trigger type does not matter. Startup, timer, manual and future triggers all call the same entry point.</td></tr>
+  </table>
+
+  <h2>Quick start</h2>
+  <pre><code><span class="c"># Linux / macOS</span>
+gh repo clone learnerforge/push-to-github
+cd push-to-github
+python3 urgithub.py --setup
+python3 urgithub.py
+
+<span class="c"># Windows (PowerShell / CMD)</span>
+python urgithub.py --setup
+python urgithub.py</code></pre>
+  <p>URGithub runs the moment you have Python, Git and GitHub CLI — three commands, nothing else. See the full walkthrough on the <a href="installation.html">Installation</a> page.</p>
+
+  <h2>Platform support</h2>
+  <table>
+    <tr><th>Feature</th><th>Windows 10/11</th><th>Linux</th><th>macOS</th></tr>
+    <tr><td>Repository engine</td><td>✓</td><td>✓</td><td>✓</td></tr>
+    <tr><td>Registration wizard &amp; Control Center</td><td>✓</td><td>✓</td><td>✓</td></tr>
+    <tr><td>File watcher &amp; resident scheduler</td><td>✓</td><td>✓</td><td>✓</td></tr>
+    <tr><td>Task Scheduler integration</td><td>✓</td><td>—</td><td>—</td></tr>
+    <tr><td>Scheduled runs</td><td>✓</td><td>cron / systemd</td><td>launchd / cron</td></tr>
+    <tr><td>Shutdown quick-push &amp; toasts</td><td>✓</td><td>—</td><td>—</td></tr>
+  </table>
+
+  <h2>Requirements</h2>
+  <table>
+    <tr><th>Requirement</th><th>Version / details</th></tr>
+    <tr><td>Python</td><td>3.10+</td></tr>
+    <tr><td>Python GUI</td><td><code>tkinter</code> required for the wizard and Control Center</td></tr>
+    <tr><td>Git</td><td>Installed and available in <code>PATH</code></td></tr>
+    <tr><td>GitHub CLI</td><td><code>gh</code> installed and authenticated</td></tr>
+    <tr><td>GitHub permissions</td><td>Authentication with the required repository access</td></tr>
+  </table>
+
+  <h2>Wiki pages</h2>
+  <div class="grid">
+    <div class="card"><h3><a href="installation.html">Installation</a></h3><p>System requirements, setup wizard, first-run procedure.</p></div>
+    <div class="card"><h3><a href="configuration.html">Configuration</a></h3><p>Config keys, <code>--config</code> CLI, commit &amp; push policies.</p></div>
+    <div class="card"><h3><a href="automation.html">Automation</a></h3><p>Triggers and scheduling on Windows, Linux and macOS.</p></div>
+    <div class="card"><h3><a href="security.html">Security</a></h3><p>Secret detection, the safety model, blocked-operation reasons.</p></div>
+    <div class="card"><h3><a href="report.html">Report &amp; Journal</a></h3><p>What <code>report.html</code> and the JSONL journal contain.</p></div>
+    <div class="card"><h3><a href="troubleshooting.html">Troubleshooting</a></h3><p>Common problems and fixes.</p></div>
+  </div>
+</main>
+
+<footer>URGithub Wiki — part of <a href="https://github.com/learnerforge/push-to-github">learnerforge/push-to-github</a></footer>
+</body>
+</html>

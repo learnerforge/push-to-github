@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Installation — URGithub Wiki</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="index.html"><img src="../assets/urgithub.svg" alt="URGithub icon"> URGithub <span class="wiki">Wiki</span></a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="installation.html" aria-current="page">Installation</a>
+    <a href="configuration.html">Configuration</a>
+    <a href="automation.html">Automation</a>
+    <a href="security.html">Security</a>
+    <a href="report.html">Report</a>
+    <a href="troubleshooting.html">Troubleshooting</a>
+  </nav>
+</header>
+
+<main>
+  <h1>Installation &amp; Setup</h1>
+
+  <h2>1. Install the tools</h2>
+  <table>
+    <tr><th>Tool</th><th>Windows</th><th>Linux / macOS</th></tr>
+    <tr><td>Python 3.10+</td><td><code>winget install Python.Python.3.12</code></td><td>Distro package / <code>brew install python</code></td></tr>
+    <tr><td>Git</td><td><code>winget install Git.Git</code></td><td><code>apt install git</code> / <code>brew install git</code></td></tr>
+    <tr><td>GitHub CLI</td><td><code>winget install GitHub.cli</code></td><td><code>apt install gh</code> / <code>brew install gh</code></td></tr>
+  </table>
+  <div class="callout warn">
+    Restart your terminal after installing Git / <code>gh</code> so <code>PATH</code> updates.
+  </div>
+
+  <h2>2. Verify the environment</h2>
+  <pre><code>python --version
+git --version
+gh --version
+gh auth status
+git config --global user.name
+git config --global user.email</code></pre>
+  <p>If the <code>git</code> identity is empty, set it before committing works:</p>
+  <pre><code>git config --global user.name "Your Name"
+git config --global user.email "you@example.com"</code></pre>
+
+  <h2>3. Clone the repository</h2>
+  <pre><code>gh repo clone learnerforge/push-to-github
+cd push-to-github</code></pre>
+
+  <h2>4. Run the setup wizard</h2>
+  <pre><code><span class="c"># Linux / macOS</span>
+python3 urgithub.py --setup
+
+<span class="c"># Windows (PowerShell / CMD)</span>
+python urgithub.py --setup</code></pre>
+  <p>The wizard checks, in order:</p>
+  <ol>
+    <li>Python</li>
+    <li>Git</li>
+    <li>GitHub CLI</li>
+    <li>GitHub authentication</li>
+    <li>Repository permissions</li>
+    <li>The selected workspace</li>
+    <li>Creates the URGithub directory structure</li>
+    <li>Registers the installation</li>
+    <li>Creates the initial configuration</li>
+    <li>Prepares URGithub for its first run</li>
+  </ol>
+
+  <h3>Everything in one command (Windows)</h3>
+  <pre><code>python urgithub.py --setup-all</code></pre>
+  <p>Registers (if needed), installs the scheduled tasks (UAC prompt for the shutdown task), runs the first sync and shows status.</p>
+
+  <h2>5. First run</h2>
+  <p>Recommended sequence for a new installation:</p>
+  <pre><code>python urgithub.py --scan      <span class="c"># discover repos</span>
+python urgithub.py --repos     <span class="c"># list what was found</span>
+python urgithub.py --verify    <span class="c"># health check</span>
+python urgithub.py --sync      <span class="c"># synchronize</span></code></pre>
+  <p>Open the report with <code>python urgithub.py --report</code> or find it at
+  <code>&lt;base&gt;\urgithub\.urgithub\reports\report.html</code>.</p>
+
+  <h2>6. Minimal setup</h2>
+  <pre><code>gh repo clone learnerforge/push-to-github
+cd push-to-github
+python3 urgithub.py --setup
+python3 urgithub.py</code></pre>
+  <p>That is enough to be registered, synchronized and reporting.</p>
+
+  <h2>Useful commands</h2>
+  <table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>--setup</code></td><td>One-time registration wizard</td></tr>
+    <tr><td><code>--setup-all</code></td><td>Register + schedule + first run + status (Windows)</td></tr>
+    <tr><td><code>--scan</code> / <code>--sync</code></td><td>Run discovery / synchronization now</td></tr>
+    <tr><td><code>--repos</code> / <code>--verify</code></td><td>List repositories / verify the environment</td></tr>
+    <tr><td><code>--watch</code></td><td>Start the file watcher</td></tr>
+    <tr><td><code>--tray</code> / (no args)</td><td>Open the Control Center GUI</td></tr>
+    <tr><td><code>--schedule install</code></td><td>Install scheduling (Windows Task Scheduler)</td></tr>
+    <tr><td><code>--config</code></td><td>Show / read / set configuration</td></tr>
+    <tr><td><code>--version</code> / <code>--help</code></td><td>Version / help</td></tr>
+  </table>
+
+  <div class="callout">
+    Next: <a href="configuration.html">Configuration</a> — every config key and how to change it.
+  </div>
+</main>
+
+<footer>URGithub Wiki — part of <a href="https://github.com/learnerforge/push-to-github">learnerforge/push-to-github</a></footer>
+</body>
+</html>

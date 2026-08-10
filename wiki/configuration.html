@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configuration — URGithub Wiki</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="index.html"><img src="../assets/urgithub.svg" alt="URGithub icon"> URGithub <span class="wiki">Wiki</span></a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="installation.html">Installation</a>
+    <a href="configuration.html" aria-current="page">Configuration</a>
+    <a href="automation.html">Automation</a>
+    <a href="security.html">Security</a>
+    <a href="report.html">Report</a>
+    <a href="troubleshooting.html">Troubleshooting</a>
+  </nav>
+</header>
+
+<main>
+  <h1>Configuration</h1>
+  <p>URGithub stores its configuration in <code>&lt;base&gt;\urgithub\.urgithub\config.json</code>. Every setting is also exposed through the CLI — you never need to hand-edit JSON.</p>
+
+  <h2>Reading and setting values</h2>
+  <pre><code>python urgithub.py --config                 <span class="c"># show full configuration</span>
+python urgithub.py --config triggers.every_hours    <span class="c"># read one value (dot path)</span>
+python urgithub.py --config triggers.every_hours 6  <span class="c"># set one value</span></code></pre>
+  <p>After changing scheduling-related settings, reapply the scheduler and verify:</p>
+  <pre><code>python urgithub.py --schedule install
+python urgithub.py --schedule status</code></pre>
+
+  <h2>Settings reference</h2>
+
+  <h3>Repository behavior</h3>
+  <table>
+    <tr><th>Key</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>github_owner</code></td><td><code>auto</code></td><td>GitHub owner to reconcile against (<code>auto</code> = logged-in user)</td></tr>
+    <tr><td><code>clone_missing_repos</code></td><td><code>true</code></td><td>Clone local repos that exist remotely but not locally</td></tr>
+    <tr><td><code>skip_forks</code></td><td><code>false</code></td><td>Skip forked repositories</td></tr>
+  </table>
+
+  <h3>Commit policy</h3>
+  <table>
+    <tr><th>Key</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>commit_policy.auto_commit</code></td><td><code>false</code></td><td>Automatically commit local changes</td></tr>
+    <tr><td><code>commit_policy.message_prefix</code></td><td><code>sync:</code></td><td>Prefix prepended to auto-commit messages</td></tr>
+  </table>
+
+  <h3>Push</h3>
+  <table>
+    <tr><th>Key</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>push.push_all_branches</code></td><td><code>false</code></td><td>Push every branch instead of the current branch</td></tr>
+    <tr><td><code>push.timeout_seconds</code></td><td><code>60</code></td><td>Timeout per push operation</td></tr>
+  </table>
+
+  <h3>Shutdown (Windows)</h3>
+  <table>
+    <tr><th>Key</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>shutdown.enabled</code></td><td><code>true</code></td><td>Enable quick-push before shutdown</td></tr>
+    <tr><td><code>shutdown.quick_push</code></td><td><code>true</code></td><td>Push pending changes during shutdown</td></tr>
+    <tr><td><code>shutdown.timeout_seconds</code></td><td><code>30</code></td><td>Time budget for the shutdown push</td></tr>
+    <tr><td><code>shutdown.open_report</code></td><td><code>false</code></td><td>Open the report during shutdown</td></tr>
+  </table>
+
+  <h3>Report</h3>
+  <table>
+    <tr><th>Key</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>report.auto_open</code></td><td><code>true</code></td><td>Open <code>report.html</code> in the browser after a run</td></tr>
+    <tr><td><code>report.archive</code></td><td><code>true</code></td><td>Archive old reports</td></tr>
+    <tr><td><code>report.archive_keep_days</code></td><td><code>90</code></td><td>How long archived reports are kept</td></tr>
+    <tr><td><code>report.show_files</code></td><td><code>true</code></td><td>Show file lists in the report</td></tr>
+    <tr><td><code>report.files_max</code></td><td><code>500</code></td><td>Maximum files listed per repository</td></tr>
+  </table>
+
+  <h3>Security</h3>
+  <table>
+    <tr><th>Key</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>security.block_on_secrets</code></td><td><code>true</code></td><td>Block sync when secrets are detected</td></tr>
+    <tr><td><code>security.patterns</code></td><td>see below</td><td>Filename patterns treated as secrets</td></tr>
+    <tr><td><code>security.content_patterns</code></td><td>see below</td><td>Content regexes for secret detection</td></tr>
+    <tr><td><code>security.allow_files</code></td><td><code>[]</code></td><td>Explicit file allow-list exceptions</td></tr>
+    <tr><td><code>security.max_scan_bytes</code></td><td><code>1048576</code></td><td>Maximum bytes scanned per file</td></tr>
+  </table>
+
+  <h3>Limits</h3>
+  <table>
+    <tr><th>Key</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>limits.max_file_mb</code></td><td><code>100</code></td><td>Hard size limit per file</td></tr>
+    <tr><td><code>limits.warn_file_mb</code></td><td><code>50</code></td><td>Warning threshold per file</td></tr>
+    <tr><td><code>limits.block_on_oversize</code></td><td><code>true</code></td><td>Block sync for files over the hard limit</td></tr>
+  </table>
+
+  <h3>Deleted / renamed repos</h3>
+  <table>
+    <tr><th>Key</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>deleted_repo_policy.confirm_scans</code></td><td><code>3</code></td><td>Consecutive scans before a deletion is flagged</td></tr>
+    <tr><td><code>deleted_repo_policy.confirm_days</code></td><td><code>7</code></td><td>Days before a deletion is confirmed</td></tr>
+    <tr><td><code>deleted_repo_policy.require_remote_confirmation</code></td><td><code>true</code></td><td>Require the remote to confirm deletion</td></tr>
+    <tr><td><code>deleted_repo_policy.require_user_confirmation</code></td><td><code>true</code></td><td>Require explicit user confirmation</td></tr>
+  </table>
+
+  <h3>Notifications</h3>
+  <table>
+    <tr><th>Key</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>notify.toast_on_failure</code></td><td><code>true</code></td><td>Show a desktop toast on failed runs</td></tr>
+    <tr><td><code>notify.email.enabled</code></td><td><code>false</code></td><td>Email notifications (off by default)</td></tr>
+    <tr><td><code>notify.email.smtp</code> / <code>recipients</code></td><td>—</td><td>SMTP host and recipient list</td></tr>
+    <tr><td><code>notify.webhook.discord</code> / <code>slack</code></td><td><code>""</code></td><td>Webhook URLs (empty = disabled)</td></tr>
+    <tr><td><code>notify.webhook.github_actions</code></td><td><code>false</code></td><td>Send GitHub Actions-compatible events</td></tr>
+  </table>
+
+  <h3>Triggers</h3>
+  <table>
+    <tr><th>Key</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>triggers.startup</code></td><td><code>true</code></td><td>Run at login</td></tr>
+    <tr><td><code>triggers.shutdown</code></td><td><code>true</code></td><td>Quick-push at shutdown (Windows)</td></tr>
+    <tr><td><code>triggers.every_hours</code></td><td><code>3</code></td><td>Repeat interval in hours (<code>0</code> = off)</td></tr>
+    <tr><td><code>triggers.every_minutes</code></td><td><code>0</code></td><td>Repeat interval in minutes (<code>0</code> = off)</td></tr>
+    <tr><td><code>triggers.at_time</code></td><td><code>null</code></td><td>Single daily time, e.g. <code>18:00</code></td></tr>
+    <tr><td><code>triggers.file_change</code></td><td><code>true</code></td><td>Run when watched files change</td></tr>
+    <tr><td><code>triggers.manual</code></td><td><code>true</code></td><td>Allow manual runs</td></tr>
+  </table>
+
+  <div class="callout">
+    Next: <a href="automation.html">Automation</a> — how triggers become real scheduled runs on each OS.
+  </div>
+</main>
+
+<footer>URGithub Wiki — part of <a href="https://github.com/learnerforge/push-to-github">learnerforge/push-to-github</a></footer>
+</body>
+</html>

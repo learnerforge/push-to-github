@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Report &amp; Journal — URGithub Wiki</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="index.html"><img src="../assets/urgithub.svg" alt="URGithub icon"> URGithub <span class="wiki">Wiki</span></a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="installation.html">Installation</a>
+    <a href="configuration.html">Configuration</a>
+    <a href="automation.html">Automation</a>
+    <a href="security.html">Security</a>
+    <a href="report.html" aria-current="page">Report</a>
+    <a href="troubleshooting.html">Troubleshooting</a>
+  </nav>
+</header>
+
+<main>
+  <h1>Reports &amp; the Journal</h1>
+  <p>Every run — success, failure, blocked, or nothing-changed — produces two audit records: a human-readable HTML report and a machine-readable JSONL journal. Neither is optional (Rule 2).</p>
+
+  <h2>The HTML report</h2>
+  <p>Generated after every run to:</p>
+  <pre><code>&lt;base&gt;\urgithub\.urgithub\reports\report.html
+&lt;base&gt;\urgithub\.urgithub\reports\archive\</code></pre>
+  <p>Older reports are archived and kept per <code>report.archive_keep_days</code> (default 90 days). Open it with <code>python urgithub.py --report</code> or let it auto-open (<code>report.auto_open</code>, default on).</p>
+
+  <h2>What a report contains</h2>
+  <table>
+    <tr><th>Section</th><th>Records</th></tr>
+    <tr><td>Header &amp; run summary</td><td>When the run started, the trigger that started it, overall result</td></tr>
+    <tr><td>Stat cards</td><td>Counts: discovered, scanned, synchronized, commits created, pushes, failures, blocked</td></tr>
+    <tr><td>Activity timeline</td><td>Chronological log of every step in the run</td></tr>
+    <tr><td>Per-repository details</td><td>State, before/after commit identifiers, actions taken</td></tr>
+    <tr><td>All repositories</td><td>Full discovery view across your account</td></tr>
+    <tr><td>Files &amp; last commit</td><td>Changed files (up to <code>report.files_max</code>, default 500) and latest commit per repo</td></tr>
+    <tr><td>Security &amp; size</td><td>Secret findings, oversized files, warnings</td></tr>
+    <tr><td>Environment drift</td><td>Changes detected in the environment snapshot</td></tr>
+  </table>
+  <p>The report is an <strong>execution record, not only a success page</strong> — failures and blocked operations are reported as clearly as successes.</p>
+
+  <h2>First place to look when something is wrong</h2>
+  <p>When synchronization is blocked, open <code>report.html</code> and check for:</p>
+  <ul>
+    <li>divergence</li>
+    <li>detected secrets</li>
+    <li>invalid repository state</li>
+    <li>missing remote</li>
+    <li>authorization failure</li>
+    <li>repository access failure</li>
+    <li>unsupported state</li>
+  </ul>
+
+  <h2>The JSONL journal</h2>
+  <p>An append-only, machine-readable event log stored as one JSON object per line:</p>
+  <pre><code>{"ts":"...","op":"scan","repo":"...","trigger":"startup","success":true,"sha_before":"...","sha_after":"...","blocked":false}
+{"ts":"...","op":"push","repo":"...","trigger":"every_hours","success":true,"sha_before":"...","sha_after":"..."}
+{"ts":"...","op":"sync","repo":"...","trigger":"file_change","success":false,"blocked":true,"reason":"secrets"}</code></pre>
+  <p>Each event represents one operation or state transition and supports analysis of:</p>
+  <ul>
+    <li>when the operation occurred</li>
+    <li>which repository was involved</li>
+    <li>what trigger initiated it</li>
+    <li>whether the operation succeeded</li>
+    <li>what commit identifiers were involved</li>
+    <li>whether the operation was blocked</li>
+  </ul>
+
+  <div class="callout danger">
+    <strong>Do not manually edit runtime journal files</strong> unless you understand the consequences — they are append-only audit records.
+  </div>
+
+  <h2>Related settings</h2>
+  <table>
+    <tr><th>Setting</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>report.auto_open</code></td><td><code>true</code></td><td>Open <code>report.html</code> in the browser after a run</td></tr>
+    <tr><td><code>report.archive</code></td><td><code>true</code></td><td>Archive old reports</td></tr>
+    <tr><td><code>report.archive_keep_days</code></td><td><code>90</code></td><td>Retention for archived reports</td></tr>
+    <tr><td><code>report.show_files</code> / <code>files_max</code></td><td><code>true</code> / <code>500</code></td><td>Show file lists, capped at 500 per repo</td></tr>
+  </table>
+
+  <div class="callout">
+    Next: <a href="troubleshooting.html">Troubleshooting</a> — common problems and their fixes.
+  </div>
+</main>
+
+<footer>URGithub Wiki — part of <a href="https://github.com/learnerforge/push-to-github">learnerforge/push-to-github</a></footer>
+</body>
+</html>

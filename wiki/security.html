@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security — URGithub Wiki</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="index.html"><img src="../assets/urgithub.svg" alt="URGithub icon"> URGithub <span class="wiki">Wiki</span></a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="installation.html">Installation</a>
+    <a href="configuration.html">Configuration</a>
+    <a href="automation.html">Automation</a>
+    <a href="security.html" aria-current="page">Security</a>
+    <a href="report.html">Report</a>
+    <a href="troubleshooting.html">Troubleshooting</a>
+  </nav>
+</header>
+
+<main>
+  <h1>Security &amp; the Safety Model</h1>
+
+  <h2>Non-destructive by design</h2>
+  <p>URGithub <strong>never</strong> runs destructive Git operations. It will not <code>reset</code>, force-push (<code>--force</code>), rebase, or clean your working tree — under any trigger, ever.</p>
+  <p>The synchronize operation is deliberately conservative:</p>
+  <pre><code>git fetch
+git pull --ff-only      <span class="c"># fast-forward only</span>
+git commit              <span class="c"># only when the policy allows</span>
+git push</code></pre>
+
+  <h2>Secret detection</h2>
+  <p>Every file is scanned before anything is pushed. Secrets are matched two ways (both configured under <code>security.*</code>):</p>
+
+  <h3>Filename patterns</h3>
+  <pre><code>.env*            *.pem            *.key
+credentials.json secrets.json     *.p12</code></pre>
+
+  <h3>Content patterns (regex)</h3>
+  <table>
+    <tr><th>What it catches</th><th>Example pattern</th></tr>
+    <tr><td>Private keys</td><td><code>-----BEGIN [A-Z ]*PRIVATE KEY-----</code></td></tr>
+    <tr><td>GitHub tokens</td><td><code>gh[opsur]_[A-Za-z0-9]{20,}</code></td></tr>
+    <tr><td>AWS access keys</td><td><code>AKIA[0-9A-Z]{16}</code></td></tr>
+    <tr><td>Google API keys</td><td><code>AIza[0-9A-Za-z\-_]{35}</code></td></tr>
+    <tr><td>Slack tokens</td><td><code>xox[baprs]-[0-9A-Za-z\-]{10,}</code></td></tr>
+    <tr><td>Stripe live keys</td><td><code>sk_live_[0-9A-Za-z]{20,}</code></td></tr>
+    <tr><td>Generic API keys</td><td><code>sk-[A-Za-z0-9_\-]{24,}</code></td></tr>
+    <tr><td>Inline secrets</td><td><code>(?i)(api_key|secret|password|token)\s*[:=]\s*"..."</code></td></tr>
+  </table>
+  <p>Files larger than <code>security.max_scan_bytes</code> (default 1&nbsp;MB) are not fully scanned. Add exceptions via <code>security.allow_files</code> when you are certain a match is a false positive.</p>
+
+  <h2>File size limits</h2>
+  <table>
+    <tr><th>Setting</th><th>Default</th><th>Behavior</th></tr>
+    <tr><td><code>limits.warn_file_mb</code></td><td>50 MB</td><td>Warned in the report</td></tr>
+    <tr><td><code>limits.max_file_mb</code></td><td>100 MB</td><td>Blocks sync when <code>block_on_oversize</code> is on (default)</td></tr>
+  </table>
+
+  <h2>Blocked-operation reasons</h2>
+  <p>Synchronization stops and reports when any of these are detected:</p>
+  <table>
+    <tr><th>Reason</th><th>What it means</th></tr>
+    <tr><td><span class="badge red">Divergence</span></td><td>Local and remote histories have diverged — never merged automatically</td></tr>
+    <tr><td><span class="badge red">Secrets</span></td><td>Secret patterns were detected in the working tree</td></tr>
+    <tr><td><span class="badge red">Invalid state</span></td><td>Repository is in an unexpected/invalid condition</td></tr>
+    <tr><td><span class="badge red">Missing remote</span></td><td>No <code>origin</code> remote is configured</td></tr>
+    <tr><td><span class="badge red">Authorization failure</span></td><td>No permission to push</td></tr>
+    <tr><td><span class="badge red">Repository access failure</span></td><td>Remote unreachable or inaccessible</td></tr>
+    <tr><td><span class="badge red">Oversize files</span></td><td>Files over the hard size limit</td></tr>
+    <tr><td><span class="badge yellow">Uncommitted changes</span></td><td>Dirty tree without <code>commit_policy.auto_commit</code></td></tr>
+  </table>
+  <p>A blocked operation is an <strong>intentional safety result</strong>, not a bug. Do not bypass it — inspect <code>report.html</code> first.</p>
+
+  <h2>The four safety rules</h2>
+  <table>
+    <tr><th>Rule</th><th>Why it exists</th></tr>
+    <tr><td><strong>Rule 0</strong> — No registration → no operations</td><td>Unregistered runs only show the setup wizard; nothing else runs</td></tr>
+    <tr><td><strong>Rule 1</strong> — No scan → no sync</td><td>The sync engine only touches repositories scanned in the same run</td></tr>
+    <tr><td><strong>Rule 2</strong> — Every run produces a report</td><td>Failures and blocks are always visible, never silent</td></tr>
+    <tr><td><strong>Rule 3</strong> — Trigger type does not matter</td><td>Scheduled and automatic runs use the same safe pipeline as manual ones</td></tr>
+  </table>
+
+  <h2>Deleted / renamed repository policy</h2>
+  <p>URGithub will not act on a locally deleted repository without a confirmation chain:</p>
+  <ul>
+    <li><code>deleted_repo_policy.confirm_scans</code> — <strong>3</strong> consecutive scans must flag it.</li>
+    <li><code>deleted_repo_policy.confirm_days</code> — <strong>7</strong> days must pass.</li>
+    <li><code>deleted_repo_policy.require_remote_confirmation</code> — the remote must confirm deletion.</li>
+    <li><code>deleted_repo_policy.require_user_confirmation</code> — you must explicitly confirm.</li>
+  </ul>
+
+  <h2>Recommendations</h2>
+  <ul>
+    <li>Never commit credentials or secrets into any repository — block-on-secrets is the last line of defense.</li>
+    <li>Use the least-privilege GitHub token/permission set URGithub can work with.</li>
+    <li>Keep the runtime directory (<code>urgithub\.urgithub</code>) protected — it holds configuration and reports.</li>
+    <li>Review <code>report.html</code> for blocked operations before investigating further.</li>
+    <li>Rotate any secret that was ever pushed, even once.</li>
+  </ul>
+
+  <div class="callout">
+    Next: <a href="report.html">Report &amp; Journal</a> — everything the report and journal record.
+  </div>
+</main>
+
+<footer>URGithub Wiki — part of <a href="https://github.com/learnerforge/push-to-github">learnerforge/push-to-github</a></footer>
+</body>
+</html>

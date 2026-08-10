@@ -128,6 +128,58 @@ Every run — success, failure, or nothing-changed — writes `report.html` to `
 
 ## Quick Start
 
+URGithub runs the moment you have Python, Git and GitHub CLI — three commands, nothing else.
+
+### 1. Clone the repository
+
+```bash
+gh repo clone learnerforge/push-to-github
+cd push-to-github
+```
+
+### 2. Run the setup wizard
+
+```bash
+python3 urgithub.py --setup
+```
+
+On Windows:
+
+```powershell
+python urgithub.py --setup
+```
+
+The setup wizard will:
+
+1. Check Python
+2. Check Git
+3. Check GitHub CLI
+4. Verify GitHub authentication
+5. Verify repository permissions
+6. Check the selected workspace
+7. Create the URGithub directory structure
+8. Register the installation
+9. Create the initial configuration
+10. Prepare URGithub for its first run
+
+### 3. Start URGithub
+
+```bash
+python3 urgithub.py
+```
+
+On Windows:
+
+```powershell
+python urgithub.py
+```
+
+> For the complete installation, configuration, scheduling, security,
+> troubleshooting, and first-run guide, see **[`docs/SETUP.md`](docs/SETUP.md)**.
+
+> **Windows tip:** register, install the scheduled tasks and run the first sync
+> in one command with `python urgithub.py --setup-all`.
+
 ### Requirements
 
 URGithub supports **Windows, Linux, and macOS** for its core functionality.
@@ -156,116 +208,6 @@ URGithub supports **Windows, Linux, and macOS** for its core functionality.
 | Scheduled synchronization   |       ✓       | cron/systemd | launchd/cron |
 | Shutdown quick-push         |       ✓       |       —      |       —      |
 | Windows toast notifications |       ✓       |       —      |       —      |
-
-### 1. Install the prerequisites
-
-Install:
-
-* **Python 3.10 or newer**
-* **Git**
-* **GitHub CLI (`gh`)**
-
-Then verify that they are available from your terminal:
-
-```bash
-python --version
-git --version
-gh --version
-```
-
-### 2. Authenticate with GitHub
-
-Authenticate GitHub CLI:
-
-```bash
-gh auth login
-```
-
-Verify your authentication:
-
-```bash
-gh auth status
-```
-
-URGithub uses the authenticated GitHub CLI session for repository operations.
-
-### 3. Start URGithub
-
-From the project directory:
-
-**Windows**
-
-```powershell
-python urgithub.py
-```
-
-**Linux / macOS**
-
-```bash
-python3 urgithub.py
-```
-
-The setup wizard will guide you through repository discovery, configuration, authentication checks, and automatic synchronization settings.
-
-> **Windows only:** register, install the scheduled tasks and run the first sync in one command with `python urgithub.py --setup-all`. Step by step: `--setup`, `--sync`, `--schedule install`, `--tray`. The setup wizard re-checks everything for you — Git · version · username · email · gh CLI · authentication · `repo` push scope · live GitHub connection · base writable — with one-click fix buttons, and falls back to a console prompt if the GUI can't open.
-
-> The first run **downloads all your GitHub repositories** — private and forks included, unless `skip_forks` — into `repos in github\` automatically. No manual cloning.
-
-### 4. Run a synchronization manually
-
-To execute the synchronization workflow:
-
-```bash
-python urgithub.py --run manual
-```
-
-The workflow follows the safety pipeline:
-
-```text
-Discover
-   ↓
-Scan
-   ↓
-Validate
-   ↓
-Sync
-   ↓
-Commit
-   ↓
-Push
-   ↓
-Verify
-   ↓
-Generate Report
-```
-
-### 5. Schedule automatic synchronization
-
-On **Windows**, URGithub can integrate with Windows Task Scheduler for:
-
-* System startup
-* Scheduled synchronization
-* Shutdown quick-push
-
-On **Linux**, use `cron` or `systemd`:
-
-```bash
-python3 urgithub.py --run scheduled
-```
-
-On **macOS**, use `launchd` or `cron`:
-
-```bash
-python3 urgithub.py --run scheduled
-```
-
-### Important
-
-URGithub's **core engine, GUI, wizard, and file watcher are cross-platform**. Only integrations that depend on operating-system-specific functionality are platform-specific.
-
-If you are using Linux or macOS, you can still use the complete repository management engine; you simply configure scheduling through the operating system's native scheduling mechanism.
-
-The complete installation and setup manual lives in **[`docs/SETUP.md`](docs/SETUP.md)**.
 
 ## Installing the tools (from scratch)
 

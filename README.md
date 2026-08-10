@@ -53,6 +53,8 @@ Every trigger — startup, shutdown, a timer, a file change, a button click — 
 > | **Rule 2** | Every run produces `report.html` — success, failure, and nothing-changed alike. |
 > | **Rule 3** | Trigger type does not matter. Startup, timer, manual and future triggers all call the same entry point. |
 
+**Cross-platform:** the engine, wizard, GUI and file watcher run on **Windows, Linux and macOS**. Only OS-specific integrations (Windows Task Scheduler, shutdown quick-push, toasts) are Windows-only. On Linux/macOS, schedule runs with your own `cron` / `systemd` / `launchd` calling `python3 urgithub.py --run scheduled` — see [SETUP.md](SETUP.md).
+
 ---
 
 <!--

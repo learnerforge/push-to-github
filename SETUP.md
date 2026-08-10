@@ -80,7 +80,7 @@ Before installing URGithub, make sure the following are available.
 
 ### Python
 
-Python **3.10 or newer**.
+Python **3.10 or newer**, with `tkinter` for the wizard and Control Center.
 
 Check:
 
@@ -164,7 +164,7 @@ The authentication check must report that you are logged in successfully.
 
 URGithub needs sufficient GitHub permissions to perform repository operations.
 
-For the current GitHub CLI workflow, the project expects repository access suitable for pushing to repositories.
+For the current GitHub CLI workflow, the project expects repository access suitable for pushing to repositories. Specifically, the registration check requires the **`repo` scope** on the authenticated GitHub CLI token.
 
 Check the authentication state with:
 
@@ -278,15 +278,20 @@ A typical layout is:
 
 ```text
 D:\Data\
-└── urgihub\
-    ├── config.json
-    ├── registry.json
-    ├── journal.jsonl
-    ├── report.html
-    ├── logs\
-    ├── repos in github\
-    ├── deleted repos\
-    └── Run\
+└── urgithub\
+    ├── logs\                    ← application.log + error.log (rotating)
+    ├── repos in github\         ← ACTIVE managed repositories
+    ├── deleted repos\           ← quarantined archives (never auto-deleted)
+    ├── Run\                     ← deployed .bat launchers + NOTES.md
+    └── .urgithub\               ← hidden data
+        ├── config.json          ← all settings
+        ├── database\
+        │   ├── registry.json    ← repository registry
+        │   └── journal.jsonl    ← append-only event journal
+        ├── reports\             ← report.html + archive\
+        ├── locks\               ← run.lock (stale after 15 s)
+        ├── cache\
+        └── credentials\
 ```
 
 The exact generated structure may vary with the current URGithub version.
@@ -316,7 +321,7 @@ The setup process verifies items such as:
 5. Git email
 6. GitHub CLI availability
 7. GitHub authentication
-8. Required GitHub repository access
+8. Required GitHub repository access (`repo` scope)
 9. GitHub connectivity
 10. Base-directory writability
 
@@ -561,7 +566,7 @@ python urgithub.py --run manual
 
 Windows can invoke a shutdown-oriented quick-push when a user-initiated shutdown/restart event is detected.
 
-This mode is intentionally constrained because Windows shutdown provides limited time for applications to finish work.
+This mode is intentionally constrained because Windows shutdown provides limited time for applications to finish work. Each quick-push has a hard timeout (default **30 seconds**), and no report is shown.
 
 The shutdown operation should therefore be treated differently from a normal full synchronization.
 
@@ -655,6 +660,12 @@ Launch it with:
 
 ```bash
 python urgithub.py --tray
+```
+
+or simply:
+
+```bash
+python urgithub.py
 ```
 
 The GUI requires Python's `tkinter` support.

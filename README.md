@@ -175,7 +175,7 @@ python urgithub.py
 ```
 
 > For the complete installation, configuration, scheduling, security,
-> troubleshooting, and first-run guide, see **[`docs/SETUP.md`](docs/SETUP.md)**.
+> troubleshooting, and first-run guide, see **[`SETUP.md`](SETUP.md)**.
 
 > **Windows tip:** register, install the scheduled tasks and run the first sync
 > in one command with `python urgithub.py --setup-all`.

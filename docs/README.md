@@ -125,7 +125,7 @@ Full layout, config schema and registry schema: [Detail 2](spec/02-base-location
 
 | File | Content |
 |------|---------|
-| [Setup Guide](SETUP.md) | **Authoritative installation and setup manual** — requirements, dependencies, GitHub auth, registration, triggers, first run, verification, generated files, troubleshooting, uninstall/reset |
+| [Setup Guide](../SETUP.md) | **Authoritative installation and setup manual** — requirements, dependencies, GitHub auth, registration, triggers, first run, verification, generated files, troubleshooting, uninstall/reset |
 | [00 — Environment Detection & Registration](spec/00-environment-detection-and-registration.md) | First-launch wizard, four-layer env model, registration gate, light re-check + drift, deleted-repos quarantine workflow |
 | [01 — The Universal Trigger Pipeline](spec/01-universal-trigger-pipeline.md) | `run_trigger()`, gate chain + pipeline, all triggers, hard invariants, shutdown exceptions |
 | [02 — Base Location & Folder Structure](spec/02-base-location-and-folder-structure.md) | `urgithub\` layout, config.json, registry.json, launchers |

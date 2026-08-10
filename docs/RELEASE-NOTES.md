@@ -57,7 +57,7 @@ Quick start:
 python urgithub.py --setup-all
 ```
 
-Full guide: [docs/SETUP.md](../docs/SETUP.md)
+Full guide: [SETUP.md](../SETUP.md)
 
 **Assets (TBD):** `URGithub-Setup.exe` when the installer build is added
 ([URGITHUB-TASKS.md](URGITHUB-TASKS.md), item A11).

@@ -2,6 +2,7 @@
   <img src="assets/urgithub.svg" width="96" align="left" alt="URGithub icon">
   # URGithub
 </div>
+##
 
 ### The safe, automatic Git repository manager for your local machine.
 

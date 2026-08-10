@@ -1,7 +1,11 @@
 <div align="center">
-  <img src="assets/urgithub.svg" width="96" align="left" alt="URGithub icon">
-  # URGithub
-</div>
+
+<table>
+  <tr>
+    <td valign="middle"><img src="assets/urgithub.svg" height="100" alt="URGithub icon"></td>
+    <td valign="middle"><h1>URGithub</h1></td>
+  </tr>
+</table>
 
 ### The safe, automatic Git repository manager for your local machine.
 

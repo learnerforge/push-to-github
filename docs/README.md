@@ -133,6 +133,16 @@ Full layout, config schema and registry schema: [Detail 2](spec/02-base-location
 | [04 — The Sync / Commit / Push Engine](spec/04-sync-commit-push-engine.md) | safe pull/commit/push flow, decision table, safety rules, shutdown quick-push |
 | [05 — The Report & History System](spec/05-report-and-history-system.md) | report.html (dark theme, cards, timeline, details, live re-scan), atomic write + archive, show rules, JSONL journal, logs |
 
+## Project docs
+
+| File | Content |
+|------|---------|
+| [Roadmap](ROADMAP.md) | v1.0 → v1.1 (Linux/macOS + notifications) → v1.2 (web dashboard + multi-account) → v2.0 |
+| [Release Notes](RELEASE-NOTES.md) | v1.0.0 release notes, requirements, verified deliverables, open limitations |
+| [Issue Backlog](ISSUE-BACKLOG.md) | concrete, labeled issues (D/C/P/G) with acceptance criteria |
+| [Launch Plan](LAUNCH.md) | install / smoke / real-usage / release phases |
+| [Handoff Checklist](URGITHUB-TASKS.md) | pointer docs for each next engineer: where to start, what to read, what to fix |
+
 ## Repository map
 
 | Module | Responsibility |

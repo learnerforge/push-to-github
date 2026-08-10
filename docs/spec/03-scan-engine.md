@@ -10,7 +10,7 @@ A complete repository inspection, not just `git status`. Runs every time, for ev
   - `status == "quarantined"` → `ScanResult(status="QUARANTINED")`
   - `status in ("deleted", "missing", "LOCAL_MISSING")` → `ScanResult(status="MISSING")`
   - folder missing or no `.git` → `ScanResult(status="MISSING")`
-- `Scanner._inspect(name, path)` — the 20-point inspection.
+- `Scanner._inspect(name, path)` — the 23-point inspection.
 - `validate_result(result, cfg)` — the validation gate (see below).
 - `Scanner.render(result)` — human-readable console block.
 

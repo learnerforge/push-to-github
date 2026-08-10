@@ -122,7 +122,7 @@ def _content_findings(file_path, patterns, max_bytes):
 
 
 class Scanner:
-    """Phase 3 — the 20-point inspection producing a ScanResult per repo."""
+    """Phase 3 — the 23-point inspection producing a ScanResult per repo."""
 
     def __init__(self, cfg, journal, log, run_id, trigger, interactive=False):
         self.cfg = cfg

@@ -1,45 +1,271 @@
+<div align="center">
+
 # URGithub
 
-**Universal Git repository operations manager.** Scan, discover, synchronize, commit, push, verify, schedule, quarantine, and report on your Git repositories — automatically and safely, on your own machine.
+### The safe, automatic Git repository manager for your local machine.
 
-No cloud. No daemon installs. Python standard library only. Every trigger enters exactly one pipeline, and nothing destructive ever happens.
+Automatically **discover, scan, synchronize, commit, push, verify and monitor** all your Git repositories — with safety gates and a complete HTML activity report after every run.
 
----
+No cloud. No daemon installs. No third-party Python dependencies. Nothing destructive ever happens.
 
-## Why URGithub
+<!--
+  BADGES — add after the CI/security workflows are live (docs/URGITHUB-TASKS.md, item A5):
+  ![CI](https://img.shields.io/github/actions/workflow/status/learnerforge/urgithub/tests.yml?label=CI)
+  ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB)
+  ![License](https://img.shields.io/github/license/learnerforge/urgithub)
+  ![Security](https://img.shields.io/badge/security-gated-green)
+  ![Release](https://img.shields.io/github/v/release/learnerforge/urgithub)
+-->
 
-- **One pipeline, every trigger.** Startup, shutdown, a timer, a file change, a manual click, a launcher `.bat` — all call the same engine (`runner.run_trigger`). There is never a second implementation of synchronization.
-- **Safety first.** Never `reset`, never `--force`, never `rebase`, never `clean`. Pulls are fast-forward only. Secrets stop a repo cold. Divergence blocks a repo instead of clobbering it. GitHub-repo *authorization* is checked separately from *authentication*.
-- **Fully automatic.** Windows Task Scheduler keeps everything running after you close the terminal: logon startup, a repeating timer, and an EventID-1074 shutdown task that quick-pushes before Windows goes down.
-- **Transparent.** Every action is journaled (append-only JSONL), and every run writes a human-readable `report.html` (dark GitHub theme).
-
----
-
-## The four rules
-
-| Rule | Meaning |
-|------|---------|
-| **Rule 0** | No registration → no operations. Only `--setup` runs first. |
-| **Rule 1** | No scan → no sync. The sync engine only touches repos scanned in the current run. |
-| **Rule 2** | Every run produces `report.html` — success, failure, and nothing-changed alike. |
-| **Rule 3** | Trigger type does not matter. `startup`, `every 3h`, `manual`, and future triggers all call the same entry point. |
+</div>
 
 ---
 
-## Requirements
+## The problem
 
-- **Windows 10/11**
-- **Git** — on `PATH` (`git --version`), with a configured identity:
-  ```
-  git config --global user.name  "Your Name"
-  git config --global user.email "you@example.com"
-  ```
-- **GitHub CLI (`gh`)** — installed and authenticated with the `repo` (push) scope:
-  ```
-  gh auth login
-  gh auth status      # must show "Token scopes: ... 'repo' ..."
-  ```
-- **Python 3.10+** — any recent Python works; nothing beyond the standard library is needed. [Download Python](https://www.python.org/downloads/)
+You keep dozens of Git repositories on your own machine — side projects, work repos, AI experiments, scripts. Then you spend hours every week doing the same things by hand:
+
+- forgetting which folders are even Git repos,
+- editing a file and leaving it uncommitted for days,
+- accidentally pushing a `.env` with real keys in it,
+- getting a conflict because someone else pushed while you were working,
+- losing track of whether your local copy even matches GitHub.
+
+URGithub exists to make that entire category of work **automatic and safe** — and then show you exactly what it did.
+
+## The solution
+
+**URGithub is the safety layer between your filesystem and GitHub.**
+
+It watches your `repos in github` folder, discovers every repository, scans each one through a **23-point inspection**, blocks anything unsafe, synchronizes the rest, and writes a human-readable HTML report of everything that happened.
+
+```
+DISCOVER → SCAN → SECURITY → VALIDATE → SYNC → COMMIT → PUSH → JOURNAL → REPORT
+```
+
+Every trigger — startup, shutdown, a timer, a file change, a button click — enters this **one pipeline**. There is never a second, unsafer path.
+
+> **The four rules**
+> | Rule | Meaning |
+> |------|---------|
+> | **Rule 0** | No registration → no operations. Only `--setup` runs first. |
+> | **Rule 1** | No scan → no sync. The sync engine only touches repos scanned in the current run. |
+> | **Rule 2** | Every run produces `report.html` — success, failure, and nothing-changed alike. |
+> | **Rule 3** | Trigger type does not matter. Startup, timer, manual and future triggers all call the same entry point. |
+
+---
+
+<!--
+  DEMO GIF — 30–60 seconds, top of the page (docs/URGITHUB-TASKS.md, item A6):
+  <img src="docs/screenshots/demo.gif" alt="URGithub demo" width="720">
+-->
+
+## Features
+
+| | |
+|---|---|
+| ◆ **Automatic discovery** | Finds every repo under `repos in github\` and reconciles it against `gh repo list`. On the first run it **clones your entire GitHub account** — private repos and forks included (unless `skip_forks`). |
+| ▲ **Secret detection** | Scans file **names and contents** for keys, tokens and passwords. A secret stops that repo cold — nothing with a `.env` or a hard-coded key ever gets pushed. |
+| ⟳ **Automatic sync** | Fetch → fast-forward-only pull → commit (per policy) → push. Safe by construction: never `reset`, `--force`, `rebase` or `clean`. |
+| ⇉ **Divergence protection** | If the local and remote histories diverged, the repo is **blocked** instead of clobbered. You review, you decide. |
+| ▤ **HTML reports** | A dark, GitHub-themed activity report after **every** run — cards, timeline, per-repo details, and per-file last-commit dates. |
+| ◷ **Startup / shutdown / scheduled** | Windows Task Scheduler runs it at logon, on a repeating timer, and quick-pushes before shutdown. |
+| ✎ **File-change triggering** | A debounced watcher fires a full run when your repos folder changes — edit, save, done. |
+| ▣ **Repository quarantine** | Repos confirmed deleted on GitHub are moved to `deleted repos\` — never silently deleted, and only with your confirmation. |
+| ◈ **No third-party deps** | Pure Python standard library. No `pip install`, no build step, no daemon. |
+| ≣ **Full audit trail** | Every action journaled to an append-only JSONL file with before/after SHAs. |
+
+## How a run works
+
+```
+registration gate → lock (stale after 15 s) → journal run-start → light env check
+→ DISCOVER   (scan repos in github\, reconcile with `gh repo list`,
+              clone missing, adopt renames, staged quarantine)
+→ SCAN       (23-point inspection per repo → ScanResult)
+→ VALIDATE   (secrets gate · size gate · divergence gate · auth gate —
+              stop that repo, continue others)
+→ SYNC       (fetch → fast-forward-only pull)
+→ COMMIT/PUSH (per auto_commit / push policy)
+→ JOURNAL    (every action with before/after SHAs)
+→ REPORT     (report.html, atomic write + archive — Rule 2)
+→ SHOW       (interactive → browser · background → toast · shutdown → never)
+→ journal run-end → release lock
+```
+
+### When a repo is **not** pushed
+
+| Situation | Result |
+|-----------|--------|
+| Secret files found (`block_on_secrets`) | `blocked: secrets` — by filename pattern **and** file content |
+| File larger than `limits.max_file_mb` | `blocked: oversize files` |
+| Local ahead **and** remote ahead | `blocked: divergence` |
+| Remote unreachable | `blocked: remote unreachable` |
+| No push permission on the repo | `blocked: no push permission` |
+| No `origin` remote | `blocked: no remote configured` |
+| Folder missing / not a git repo / quarantined | `blocked: missing` |
+| Dirty tree + `auto_commit` off | `skipped` (never silently commits) |
+| Fetch / `git add` / commit / push fails | `failed` (journaled with the reason) |
+
+Every case is journaled and visible in `report.html`. Repos that pass are still pushed — one bad repo never blocks the others.
+
+---
+
+## The Git Activity Report
+
+Every run — success, failure, or nothing-changed — writes `report.html` to `<base>\urgithub\.urgithub\reports\` (atomic write, timestamped archive, pruned after 90 days). Dark GitHub theme:
+
+- **Header** — run time · trigger · duration · run ID · outcome
+- **7 stat cards** — Pushed · Cloned · Renamed · Initialized · Removed · Failed · Events, each with its own accent color
+- **Activity timeline** — icon-chip rows (P/C/I/R/D/X/B/-) with mono timestamps, repo names, details, and `↗` links to GitHub
+- **Details** — per-repo blocks with action badge, `before → after` SHAs, A/M/D/R changed-file chips, and "Open on GitHub ↗"
+- **All repositories** — a live re-scan showing registry status, **branch**, and CLEAN/DIRTY/UNINIT
+- **Files & Last Commit** — per-file "committed at" dates, GitHub file-browser style (newest first, `uncommitted` for untracked)
+- **Security & Size** and **Environment Drift** — only when findings exist
+
+<!-- Sample report: <a href="docs/sample-report.html">View a sample report ↗</a> (generate + commit it — docs/URGITHUB-TASKS.md, item A7) -->
+
+---
+
+## Quick Start
+
+### Requirements
+
+URGithub supports **Windows, Linux, and macOS** for its core functionality.
+
+| Requirement        | Version / Details                                    |
+| ------------------ | ---------------------------------------------------- |
+| Python             | **3.10+**                                            |
+| Python GUI         | `tkinter` required for the wizard and Control Center |
+| Git                | Installed and available in `PATH`                    |
+| GitHub CLI         | `gh` installed and authenticated                     |
+| GitHub permissions | Authentication with the required repository access   |
+
+> **Windows users:** Windows 10 or Windows 11 is required for Windows-specific integrations such as Task Scheduler, shutdown quick-push, and Windows notifications.
+
+### Platform Support
+
+| Feature                     | Windows 10/11 |     Linux    |     macOS    |
+| --------------------------- | :-----------: | :----------: | :----------: |
+| Repository engine           |       ✓       |       ✓      |       ✓      |
+| Registration wizard         |       ✓       |       ✓      |       ✓      |
+| Control Center GUI          |       ✓       |       ✓      |       ✓      |
+| File watcher                |       ✓       |       ✓      |       ✓      |
+| Resident scheduler          |       ✓       |       ✓      |       ✓      |
+| Task Scheduler integration  |       ✓       |       —      |       —      |
+| Startup scheduling          |       ✓       | cron/systemd | launchd/cron |
+| Scheduled synchronization   |       ✓       | cron/systemd | launchd/cron |
+| Shutdown quick-push         |       ✓       |       —      |       —      |
+| Windows toast notifications |       ✓       |       —      |       —      |
+
+### 1. Install the prerequisites
+
+Install:
+
+* **Python 3.10 or newer**
+* **Git**
+* **GitHub CLI (`gh`)**
+
+Then verify that they are available from your terminal:
+
+```bash
+python --version
+git --version
+gh --version
+```
+
+### 2. Authenticate with GitHub
+
+Authenticate GitHub CLI:
+
+```bash
+gh auth login
+```
+
+Verify your authentication:
+
+```bash
+gh auth status
+```
+
+URGithub uses the authenticated GitHub CLI session for repository operations.
+
+### 3. Start URGithub
+
+From the project directory:
+
+**Windows**
+
+```powershell
+python urgithub.py
+```
+
+**Linux / macOS**
+
+```bash
+python3 urgithub.py
+```
+
+The setup wizard will guide you through repository discovery, configuration, authentication checks, and automatic synchronization settings.
+
+> **Windows only:** register, install the scheduled tasks and run the first sync in one command with `python urgithub.py --setup-all`. Step by step: `--setup`, `--sync`, `--schedule install`, `--tray`. The setup wizard re-checks everything for you — Git · version · username · email · gh CLI · authentication · `repo` push scope · live GitHub connection · base writable — with one-click fix buttons, and falls back to a console prompt if the GUI can't open.
+
+> The first run **downloads all your GitHub repositories** — private and forks included, unless `skip_forks` — into `repos in github\` automatically. No manual cloning.
+
+### 4. Run a synchronization manually
+
+To execute the synchronization workflow:
+
+```bash
+python urgithub.py --run manual
+```
+
+The workflow follows the safety pipeline:
+
+```text
+Discover
+   ↓
+Scan
+   ↓
+Validate
+   ↓
+Sync
+   ↓
+Commit
+   ↓
+Push
+   ↓
+Verify
+   ↓
+Generate Report
+```
+
+### 5. Schedule automatic synchronization
+
+On **Windows**, URGithub can integrate with Windows Task Scheduler for:
+
+* System startup
+* Scheduled synchronization
+* Shutdown quick-push
+
+On **Linux**, use `cron` or `systemd`:
+
+```bash
+python3 urgithub.py --run scheduled
+```
+
+On **macOS**, use `launchd` or `cron`:
+
+```bash
+python3 urgithub.py --run scheduled
+```
+
+### Important
+
+URGithub's **core engine, GUI, wizard, and file watcher are cross-platform**. Only integrations that depend on operating-system-specific functionality are platform-specific.
+
+If you are using Linux or macOS, you can still use the complete repository management engine; you simply configure scheduling through the operating system's native scheduling mechanism.
+
+The complete screen-by-screen guide lives in **[`setup.md`](setup.md)**.
 
 ## Installing the tools (from scratch)
 
@@ -58,53 +284,6 @@ gh --version                      # → gh version 2.xx
 gh auth login
 gh auth status                    # ✓ Logged in ... Token scopes: ... 'repo' ...
 ```
-
-**Official download pages** (when you prefer manual installs):
-
-| Software | Windows | Linux | macOS |
-|---|---|---|---|
-| Python 3.10+ | [python.org/downloads/windows](https://www.python.org/downloads/windows/) | [python.org/downloads/source](https://www.python.org/downloads/source/) | [python.org/downloads/macos](https://www.python.org/downloads/macos/) |
-| Git | [git-scm.com/download/win](https://git-scm.com/download/win) | [git-scm.com/download/linux](https://git-scm.com/download/linux) | [git-scm.com/download/mac](https://git-scm.com/download/mac) |
-| GitHub CLI | [cli.github.com](https://cli.github.com/) | [cli.github.com](https://cli.github.com/) | [cli.github.com](https://cli.github.com/) |
-| GitHub account | [github.com/signup](https://github.com/signup) | [github.com/signup](https://github.com/signup) | [github.com/signup](https://github.com/signup) |
-
-The registration wizard (`--setup`) re-checks all of this for you — Git · version · username · email · gh CLI · authentication · `repo` push scope · live GitHub connection · base writable — with one-click fix buttons.
-
----
-
-## Quick start
-
-```powershell
-cd E:\Project-1
-
-# One command: register (GUI wizard) → install scheduled tasks
-# (startup, timer, shutdown-with-UAC) → first run → schedule status
-python urgithub.py --setup-all
-
-# Or step by step:
-python urgithub.py --setup       # register one time
-python urgithub.py --sync        # run the full pipeline once
-python urgithub.py --schedule install   # install scheduled tasks
-python urgithub.py --tray        # open the control panel
-```
-
-That's it. After setup you can also use the launchers in `<base>\urgithub\Run\` or the project's `Run\` folder.
-
----
-
-## Registration (`--setup`)
-
-Registration is a one-time wizard that creates the base structure and writes `~/.urgithub/base.txt` (the locator that points at your `config.json`).
-
-1. Run `python urgithub.py --setup`.
-2. Pick a **base location** (a parent folder; URGithub creates `urgithub\` inside it).
-3. The environment check verifies ten items: Python, Git installed, Git version, Git username, Git email, GitHub CLI, GitHub authentication, `repo` push scope, live GitHub connection, base writable.
-4. Use the built-in fix buttons (**Install Git**, **Configure identity**, **Install GitHub CLI**, **Authenticate GitHub**) if anything is red.
-5. **Register** stays disabled until every check passes. Optionally tick "install scheduled tasks". Click it — done.
-
-Falls back to a console prompt automatically if the GUI cannot open.
-
-> Where does the data live? In your base location, e.g. `D:\Data\urgithub\` — not in this project folder. The project is just the engine. The only thing written outside the base location is `~\.urgithub\base.txt`.
 
 ---
 
@@ -136,18 +315,6 @@ python urgithub.py [options]
 | `--yes` | Skip confirmation prompts for `--forget` / `--prune` |
 | `--version` | Show version |
 
-### Config quick reference
-
-```powershell
-python urgithub.py --config                          # dump full config.json
-python urgithub.py --config triggers.every_hours     # read one key
-python urgithub.py --config triggers.every_hours 6   # set one key (int/bool/float auto-coerced)
-```
-
-After changing trigger settings, re-apply: `python urgithub.py --schedule install`.
-
----
-
 ## Triggers
 
 | Trigger | When it fires | Notes |
@@ -162,45 +329,6 @@ After changing trigger settings, re-apply: `python urgithub.py --schedule instal
 | `event_hook` | *(roadmap)* webhook/email | Same entry point |
 
 **Rule 3:** every trigger above runs `runner.run_trigger()`, which executes the identical gate chain and pipeline.
-
----
-
-## How a run works
-
-```
-registration gate → lock (stale after 15 s) → journal run-start → light env check
-→ DISCOVER   (scan repos in github\, reconcile with `gh repo list`,
-              clone missing, adopt renames, staged quarantine)
-→ SCAN       (20-point inspection per repo → ScanResult)
-→ VALIDATE   (secrets gate · size gate · divergence gate · auth gate —
-              stop that repo, continue others)
-→ SYNC       (fetch → fast-forward-only pull)
-→ COMMIT/PUSH (per auto_commit / push policy)
-→ JOURNAL    (every action with before/after SHAs)
-→ REPORT     (report.html, atomic write + archive — Rule 2)
-→ SHOW       (interactive → browser · background → toast · shutdown → never)
-→ journal run-end → release lock
-```
-
-### Shutdown is the only deviation
-
-Quick push of already-made commits only — **no discover, no scan, no pull, no commit**. Hard 30 s timeout per repo. Never opens `report.html` (the file is still written). If it fails, the next run's report surfaces it. The local repo is never touched destructively.
-
-### When a repo is not pushed
-
-| Situation | Result |
-|-----------|--------|
-| Secret files found (`block_on_secrets`) | `blocked: secrets` — by filename pattern **and** file content |
-| File larger than `limits.max_file_mb` | `blocked: oversize files` |
-| Local ahead **and** remote ahead | `blocked: divergence` |
-| Remote unreachable | `blocked: remote unreachable` |
-| No push permission on the repo | `blocked: no push permission` |
-| No `origin` remote | `blocked: no remote configured` |
-| Folder missing / not a git repo / quarantined | `blocked: missing` |
-| Dirty tree + `auto_commit` off | `skipped` (never silently commits) |
-| Fetch / `git add` / commit / push fails | `failed` (journaled with the reason) |
-
-Every case is journaled and visible in `report.html`. Repos that pass are still pushed — one bad repo never blocks the others.
 
 ---
 
@@ -311,42 +439,64 @@ python urgithub.py --schedule uninstall # remove all URGithub tasks
 
 > Creating the SYSTEM-level shutdown task may require an elevated (admin) prompt. `--setup-all` and the wizard retry it with a UAC prompt automatically.
 
----
+## Control panel & file watcher
 
-## Control panel (`--tray`)
-
-`python urgithub.py --tray` opens a small window with:
-
-- **Scan Now** / **Sync Now** — run `manual_scan` / `manual_sync` in the background
-- **Open Report** — opens the latest `report.html`
-- **Schedule Status** / **Install Schedule** — query or install Task Scheduler tasks
-- **Quit** — closes the panel
-- A live log area, a **resident timer** that fires `scheduled` / `at_time` (checked every 20 s), and an optional **file watcher** thread
-
-Everything runs in background threads so the UI never freezes.
+- `python urgithub.py` (no arguments) — the **Control Center**: Dashboard / Repositories / Schedule / Settings / Logs / Help, with **Scan now** / **Sync now**, schedule status, a resident timer and a streaming log. Everything runs in background threads so the UI never freezes.
+- `python urgithub.py --watch` — polls `repos in github\` every 10 s, waits 30 s of quiet (debounce), then fires the `file_change` trigger. `.git` internals are ignored so git bookkeeping never triggers spurious runs.
 
 ---
 
-## File watcher (`--watch`)
+## Performance
 
-`python urgithub.py --watch` polls `repos in github\` every 10 s. When files change it waits 30 s of quiet (debounce), then fires the `file_change` trigger — one full pipeline run. `.git` internals and all dot-folders are ignored, so git bookkeeping never triggers spurious runs.
+Measured on a real 12-repository account (one repo with **3,608 tracked files**):
 
----
-
-## Reports
-
-Each run writes `report.html` to `<base>\urgithub\.urgithub\reports\` (atomic write + timestamped archive, pruned after `archive_keep_days`). Dark GitHub theme:
-
-- **Header** — run time · trigger · duration · run ID · outcome
-- **7 stat cards** — Pushed · Cloned · Renamed · Initialized · Removed · Failed · Events, each with its own accent color
-- **Activity timeline** — icon-chip rows (P/C/I/R/D/X/B/-) with mono timestamps, repo names, details, and `↗` links to GitHub
-- **Details** — per-repo blocks with action badge, `before → after` SHAs, A/M/D/R changed-file chips, and "Open on GitHub ↗"
-- **All repositories** — a **live re-scan** showing registry status, **branch**, and CLEAN/DIRTY/UNINIT
-- **Security & Size** and **Environment Drift** — only when findings exist
+- Full manual scan of all 12 repos: **~42 seconds**.
+- Per-file last-commit history is a **single `git log` walk** per repo (~230 KB for the 3,600-file repo) — not one process per file.
+- Idempotent: a second run with nothing to do clones nothing and pushes nothing.
 
 ---
 
-## Deployed layout
+## FAQ
+
+**Does it ever push something I didn't want pushed?**
+No. Secrets, oversized files, divergence, unreachable remotes, missing permissions and missing remotes all **block** that repo. It never force-pushes and never does destructive `reset`/`rebase`/`clean`.
+
+**Does it commit my changes automatically?**
+Only if `commit_policy.auto_commit` is `true`. Otherwise a dirty repo is `skipped` (and shown in the report).
+
+**What if my repo gets renamed on GitHub?**
+URGithub detects it and renames the local folder + registry entry automatically. GitHub is the source of truth for names.
+
+**Where does my data live?**
+In your **base location** (e.g. `D:\Data\urgithub\`) — not in this project folder. The project is just the engine. The only thing written outside the base location is `~\.urgithub\base.txt`.
+
+**Does it work on Linux/macOS?**
+The engine and GUI work anywhere Python 3.10+ runs; the Windows Task Scheduler integration and shutdown quick-push are Windows-only. Cross-platform scheduling is on the [roadmap](docs/ROADMAP.md).
+
+---
+
+## Roadmap
+
+See **[`docs/ROADMAP.md`](docs/ROADMAP.md)** — v1.0 (done), v1.1 (Linux/macOS + notifications), v1.2 (web dashboard + multi-account), v2.0 (cross-platform daemon + policies).
+
+## Contributing
+
+Bugs, ideas and pull requests are welcome. Start at **[`docs/ISSUE-BACKLOG.md`](docs/ISSUE-BACKLOG.md)** — a set of concrete, labeled issues with acceptance criteria. The engineering docs live in **[`docs/`](docs/README.md)**.
+
+## Security
+
+- Secret detection is on by default (`security.block_on_secrets`). Anything flagged is reported and **never pushed**.
+- To report a vulnerability, open a private advisory on GitHub or email the maintainer — do not post keys in issues.
+
+## License
+
+MIT. <!-- add the LICENSE file — docs/URGITHUB-TASKS.md, item A4 -->
+
+---
+
+## Reference — layouts
+
+**Deployed layout**
 
 ```
 <base location>\urgithub\
@@ -365,23 +515,22 @@ Each run writes `report.html` to `<base>\urgithub\.urgithub\reports\` (atomic wr
     └── cache\ credentials\
 ```
 
----
-
-## Project layout
+**Project layout**
 
 ```
-E:\Project-1\
+<project folder>\
 ├── urgithub.py            ← entry point (thin: cli.main)
 ├── urgithub_core\
 │   ├── cli.py             ← argument handling + config/schedule/watch/tray/status commands
 │   ├── runner.py          ← universal run_trigger() pipeline + gates
 │   ├── discovery.py       ← registry, reconciliation, adoption, clone, quarantine, rename
-│   ├── scan.py            ← 20-point inspection + validation gates
+│   ├── scan.py            ← 23-point inspection + validation gates
 │   ├── sync.py            ← safe pull/commit/push + shutdown quick-push
 │   ├── report.py          ← report.html (dark theme) + archiving + show rules + toasts
 │   ├── scheduler.py       ← Task Scheduler integration + launcher deploy + next-run math
 │   ├── watch.py           ← debounced file watcher
 │   ├── tray.py            ← control panel GUI
+│   ├── gui.py             ← Control Center (Dashboard / Repos / Schedule / Settings / Logs / Help)
 │   ├── wizard.py          ← registration wizard (GUI + console fallback)
 │   ├── envcheck.py        ← registration environment checks
 │   ├── config.py          ← defaults, deep-merge, locator, load/save
@@ -390,9 +539,10 @@ E:\Project-1\
 │   ├── journal.py         ← append-only JSONL journal
 │   ├── lock.py            ← PID-based run lock
 │   ├── logs.py            ← rotating logging
+│   ├── prompt.py          ← unified GUI/terminal confirmation funnel
 │   └── gitops.py          ← non-interactive git/gh wrappers
 ├── Run\                   ← dev launchers (start/scan/sync/shutdown/schedule/manual.bat)
-├── docs\                  ← README + REPORT-REDESIGN-NOTE + spec/00..05
+├── docs\                  ← guides + roadmap + spec/00..05
 └── .gitignore
 ```
 
@@ -421,29 +571,3 @@ GitHub is the source of truth for names.
 - **Renamed on GitHub only** → URGithub detects it via `gh api` returning the new name and renames the local folder + registry entry automatically.
 - **Renamed locally only** → URGithub adopts it: on the next run it reads the folder's `origin`, matches it to the existing registry entry (whose path is gone), and reuses that entry — updating the path, no duplicate clone, no quarantine. Then just `gh repo rename NewName --repo owner/OldName` on GitHub to match.
 - Leftover ghost entries (from manual moves) can be dropped with `--forget NAME` or bulk-cleaned with `--prune`.
-
----
-
-## Development & verification
-
-Each phase has a standalone test harness in the temp workspace:
-
-```powershell
-python p2_test.py  # discovery / registry
-python p3_test.py  # scan engine
-python p4_test.py  # sync engine
-python p5_test.py  # report engine
-python p6_test.py  # triggers / scheduler / watcher / tray wiring
-python p7_test.py  # rename adoption + registry cleanup
-python p8_test.py  # content-based secrets + file-size gate
-python smoke_harness.py  # end-to-end scan → push → idempotent second run
-```
-
-All harnesses create throwaway bases under a temp dir and patch the locator; they never touch your real registration.
-
----
-
-## Roadmap
-
-- **Done (Phases 1–6 + report redesign):** registration wizard · discovery/registry · 20-point scan · validation gates · safe sync/commit/push · dark-theme report.html + journal · quarantine workflow · Windows Task Scheduler (startup/timer/shutdown) · file watcher · control panel · config CLI.
-- **Future:** `event_hook` trigger (webhook/email), email/webhook notifications, real system-tray icon (via a `pystray`-based optional extra), report header avatar + outcome badge + footer polish.

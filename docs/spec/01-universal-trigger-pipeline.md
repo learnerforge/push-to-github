@@ -79,7 +79,7 @@ DISCOVER  (Discovery(cfg, journal, log, run_id, trigger).run())
     → returns events[]     (discovered/cloned/renamed/adopted/removed/fail)
 
 SCAN      (Scanner(...).scan_repo(name, entry) per active registry entry)
-    · 20-point inspection per repo → ScanResult (Detail 3)
+    · 23-point inspection per repo → ScanResult (Detail 3)
     · quarantined/deleted repos are skipped
     · last_scan_sha stored into the registry entry, registry saved
     → ScanResult[]

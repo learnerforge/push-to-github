@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/urgithub.svg" width="120" alt="URGithub icon">
+<img src="assets/urgithub.svg" width="96" align="left" alt="URGithub icon">
 
 # URGithub
 

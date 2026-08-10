@@ -62,6 +62,64 @@ Every trigger — startup, shutdown, a timer, a file change, a button click — 
   <img src="docs/screenshots/demo.gif" alt="URGithub demo" width="720">
 -->
 
+## Quick Start
+
+URGithub runs the moment you have Python, Git and GitHub CLI — three commands, nothing else.
+
+### 1. Clone the repository
+
+Works on **Windows, Linux and macOS**:
+
+```bash
+gh repo clone learnerforge/push-to-github
+cd push-to-github
+```
+
+### 2. Run the setup wizard
+
+```bash
+# Linux / macOS
+python3 urgithub.py --setup
+```
+
+```powershell
+# Windows (PowerShell / CMD)
+python urgithub.py --setup
+```
+
+The setup wizard will:
+
+1. Check Python
+2. Check Git
+3. Check GitHub CLI
+4. Verify GitHub authentication
+5. Verify repository permissions
+6. Check the selected workspace
+7. Create the URGithub directory structure
+8. Register the installation
+9. Create the initial configuration
+10. Prepare URGithub for its first run
+
+### 3. Start URGithub
+
+```bash
+# Linux / macOS
+python3 urgithub.py
+```
+
+```powershell
+# Windows (PowerShell / CMD)
+python urgithub.py
+```
+
+> For the complete installation, configuration, scheduling, security,
+> troubleshooting, and first-run guide, see **[`SETUP.md`](SETUP.md)**.
+
+> **Windows tip:** register, install the scheduled tasks and run the first sync
+> in one command with `python urgithub.py --setup-all`.
+
+---
+
 ## Features
 
 | | |
@@ -128,61 +186,7 @@ Every run — success, failure, or nothing-changed — writes `report.html` to `
 
 ---
 
-## Quick Start
-
-URGithub runs the moment you have Python, Git and GitHub CLI — three commands, nothing else.
-
-### 1. Clone the repository
-
-```bash
-gh repo clone learnerforge/push-to-github
-cd push-to-github
-```
-
-### 2. Run the setup wizard
-
-```bash
-python3 urgithub.py --setup
-```
-
-On Windows:
-
-```powershell
-python urgithub.py --setup
-```
-
-The setup wizard will:
-
-1. Check Python
-2. Check Git
-3. Check GitHub CLI
-4. Verify GitHub authentication
-5. Verify repository permissions
-6. Check the selected workspace
-7. Create the URGithub directory structure
-8. Register the installation
-9. Create the initial configuration
-10. Prepare URGithub for its first run
-
-### 3. Start URGithub
-
-```bash
-python3 urgithub.py
-```
-
-On Windows:
-
-```powershell
-python urgithub.py
-```
-
-> For the complete installation, configuration, scheduling, security,
-> troubleshooting, and first-run guide, see **[`SETUP.md`](SETUP.md)**.
-
-> **Windows tip:** register, install the scheduled tasks and run the first sync
-> in one command with `python urgithub.py --setup-all`.
-
-### Requirements
+## Requirements
 
 URGithub supports **Windows, Linux, and macOS** for its core functionality.
 
@@ -196,7 +200,7 @@ URGithub supports **Windows, Linux, and macOS** for its core functionality.
 
 > **Windows users:** Windows 10 or Windows 11 is required for Windows-specific integrations such as Task Scheduler, shutdown quick-push, and Windows notifications.
 
-### Platform Support
+## Platform Support
 
 | Feature                     | Windows 10/11 |     Linux    |     macOS    |
 | --------------------------- | :-----------: | :----------: | :----------: |

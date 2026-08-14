@@ -22,9 +22,9 @@ TRIGGERS = {
 INTERACTIVE_TRIGGERS = ("manual_scan", "manual_sync")
 
 
-def _light_env_check(paths):
+def _light_env_check(paths, require_gh=True):
     git_ok = gitops.run_git(["--version"]).returncode == 0
-    gh_ok = gitops.run_gh(["auth", "status"]).returncode == 0
+    gh_ok = gitops.run_gh(["auth", "status"]).returncode == 0 if require_gh else True
     base_ok = bool(paths) and paths.base_location.is_dir()
     return git_ok, gh_ok, base_ok
 
@@ -85,25 +85,13 @@ def _sync_events(results, registry=None):
 def _run_pipeline(log, journal, run_id, trigger, paths, cfg, interactive):
     started = time.time()
 
-    discovery = Discovery(cfg, journal, log, run_id, trigger, interactive=interactive)
-    events = discovery.run()
-    registry = discovery.registry
-
-    scanner = Scanner(cfg, journal, log, run_id, trigger, interactive=interactive)
+    events = []
     scan_results = []
-    for name, entry in registry.data.items():
-        if entry.get("status") in ("quarantined", "deleted"):
-            continue
-        result = scanner.scan_repo(name, entry)
-        entry["last_scan_sha"] = result.head_sha
-        scan_results.append(result)
-        log.info("Scan [%s] → %s", name, result.status)
-    registry.save()
-
-    outcome = "clean"
     sync_results = []
+    outcome = "clean"
 
     if trigger == "shutdown":
+        registry = Registry(paths.registry).load()
         sync = SyncEngine(cfg, journal, log, run_id, trigger, interactive=interactive)
         timeout = int(cfg.get("shutdown", {}).get("timeout_seconds", 30))
         for name, entry in registry.data.items():
@@ -111,23 +99,37 @@ def _run_pipeline(log, journal, run_id, trigger, paths, cfg, interactive):
                 continue
             sync_results.append(sync.quick_push(name, entry, timeout))
         outcome = _outcome(sync_results)
+    else:
+        discovery = Discovery(cfg, journal, log, run_id, trigger, interactive=interactive)
+        events = discovery.run()
+        registry = discovery.registry
 
-    elif trigger != "manual_scan":
-        log.info("Phase 4 — sync/commit/push")
-        sync = SyncEngine(cfg, journal, log, run_id, trigger, interactive=interactive)
-        sync_results = sync.run(scan_results, registry)
-        for r in sync_results:
-            entry = registry.get(r.repo)
-            if entry and r.action == "pushed":
-                entry["last_sync_sha"] = r.after_sha
-                entry["diverged_since"] = None
-            elif entry and r.action == "blocked" and r.reason.startswith("divergence"):
-                entry["diverged_since"] = entry.get("diverged_since") or utcnow()
-            elif entry and r.action != "blocked":
-                entry["diverged_since"] = None
+        scanner = Scanner(cfg, journal, log, run_id, trigger, interactive=interactive)
+        for name, entry in registry.data.items():
+            if entry.get("status") in ("quarantined", "deleted"):
+                continue
+            result = scanner.scan_repo(name, entry)
+            entry["last_scan_sha"] = result.head_sha
+            scan_results.append(result)
+            log.info("Scan [%s] → %s", name, result.status)
         registry.save()
-        events += _sync_events(sync_results, registry)
-        outcome = _outcome(sync_results)
+
+        if trigger != "manual_scan":
+            log.info("Phase 4 — sync/commit/push")
+            sync = SyncEngine(cfg, journal, log, run_id, trigger, interactive=interactive)
+            sync_results = sync.run(scan_results, registry)
+            for r in sync_results:
+                entry = registry.get(r.repo)
+                if entry and r.action == "pushed":
+                    entry["last_sync_sha"] = r.after_sha
+                    entry["diverged_since"] = None
+                elif entry and r.action == "blocked" and r.reason.startswith("divergence"):
+                    entry["diverged_since"] = entry.get("diverged_since") or utcnow()
+                elif entry and r.action != "blocked":
+                    entry["diverged_since"] = None
+            registry.save()
+            events += _sync_events(sync_results, registry)
+            outcome = _outcome(sync_results)
 
     duration = time.time() - started
     drift = _drift_warnings(cfg)
@@ -190,7 +192,7 @@ def run_trigger(trigger, interactive=None):
     run_id = journal.open_run(trigger)
     log.info("Run started [%s] run_id=%s", trigger, run_id)
     try:
-        git_ok, gh_ok, base_ok = _light_env_check(paths)
+        git_ok, gh_ok, base_ok = _light_env_check(paths, require_gh=trigger != "shutdown")
         if not (git_ok and gh_ok and base_ok):
             _journal_phase(log, journal, run_id, trigger, "env-check", "env_fail",
                            {"git": git_ok, "github_auth": gh_ok, "base_location": base_ok})

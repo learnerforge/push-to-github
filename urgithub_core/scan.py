@@ -256,12 +256,7 @@ class Scanner:
         result = gitops.run_gh(["api", f"repos/{owner}/{name}", "--jq", ".permissions.push"], timeout=30)
         if result.returncode == 0:
             return "PUSH" if result.stdout.strip() == "true" else "READ"
-        stderr = result.stderr or ""
-        if "404" in stderr:
-            return "UNKNOWN"
-        if "timed out" in stderr:
-            return "UNKNOWN"
-        return "NONE"
+        return "UNKNOWN"
 
     def _candidate_files(self, path):
         tracked = gitops.run_git(["ls-files"], cwd=path, timeout=20)

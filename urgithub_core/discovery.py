@@ -238,9 +238,7 @@ class Discovery:
 
     def _check_remote(self, name, entry, local_path):
         result = gitops.run_gh(["api", f"repos/{self.owner}/{name}", "--jq", ".name"], timeout=30)
-        if result.returncode == 404:
-            self._deletion_hit(name, entry, local_path)
-        elif result.returncode == 0:
+        if result.returncode == 0:
             actual = (result.stdout or "").strip()
             if actual and actual != name:
                 self._rename_repo(name, actual, entry, local_path)
@@ -249,6 +247,8 @@ class Discovery:
                 if entry.get("status") == "pending":
                     entry["status"] = "active"
                     entry["deletion_suspected_at"] = None
+        elif "404" in (result.stderr or ""):
+            self._deletion_hit(name, entry, local_path)
         else:
             self.log.debug(
                 "[%s] gh api check failed (%s) — treated as connection failure, not deletion",
@@ -331,6 +331,14 @@ class Discovery:
             self.log.error("[%s] rename to %s failed: %s", old_name, new_name, exc)
             self.event("fail", old_name, reason="rename failed")
             return
+        new_url = self.github_urls.get(new_name) or f"https://github.com/{self.owner}/{new_name}.git"
+        set_remote = gitops.run_git(["remote", "set-url", "origin", new_url], cwd=target, timeout=15)
+        if set_remote.returncode != 0:
+            self.log.warning(
+                "[%s] could not update origin remote to %s (%s)",
+                new_name, new_url, (set_remote.stderr or "").strip()[:80],
+            )
+        entry["url"] = new_url.removesuffix(".git")
         self.registry.remove(old_name)
         entry["path"] = str(target)
         entry["status"] = "active"
